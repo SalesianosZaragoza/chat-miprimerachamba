@@ -1,6 +1,6 @@
 from socket import *
 
-server_adress = "localhost"
+server_adress = ""
 server_port = 9069
 
 #creating a new socket
@@ -11,9 +11,9 @@ server_socket.listen()
 
 while True:
     socket_conection, client_adress = server_socket.accept()
-    print("conectado con un cliente. ",client_adress)
-
     client_name= socket_conection.recv(1024).decode()
+
+    print("conectado con ",client_name,client_adress)
     
     while True:
         message = socket_conection.recv(1024).decode()

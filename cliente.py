@@ -19,7 +19,7 @@ while True:
         client_socket.send(f" {message}".encode())
         #recive the message
         response = client_socket.recv(1024).decode()
-        print(response)
+        print("SERVER :"+str(response))
 
     else:
         client_socket.send(message.encode())
