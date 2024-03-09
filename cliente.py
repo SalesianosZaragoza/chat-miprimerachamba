@@ -1,25 +1,43 @@
 from socket import *
 import sys
+from commands import handle_commands
 
-server_ip = "localhost"
-server_port = 9069
-client_name = input("Ingrese su nombre: ")
+def main():
+    server_ip = "localhost"
+    server_port = 9069
+    client_name = input("Ingrese su nombre: ")
 
-client_socket = socket(AF_INET, SOCK_STREAM)
-client_socket.connect((server_ip, server_port))
+    # Crear el socket del cliente
+    client_socket = socket(AF_INET, SOCK_STREAM)
+    
+    # Conectar al servidor
+    try:
+        client_socket.connect((server_ip, server_port))
+    except Exception as e:
+        print("Error al conectar al servidor:", e)
+        sys.exit(1)
 
-client_socket.send(client_name.encode())
+    # Enviar el nombre del cliente al servidor
+    client_socket.send(client_name.encode())
 
-while True:
-    message = input("Pon tu mensaje :")
-    if message != "exit":
-        client_socket.send(f"{client_name}: {message}".encode())
-    elif message == "/LIST":
+    while True:
+        # Leer el mensaje del usuario
+        message = input("Ingrese su mensaje: ")
+
+        # Enviar el mensaje al servidor
         client_socket.send(message.encode())
-        response = client_socket.recv(1024).decode()
-        print(response)
-        
-    else:
-        client_socket.send(message.encode())
-        client_socket.close()
-        sys.exit()
+
+        # Verificar si el usuario quiere salir del chat
+        if message.lower() == "/exit":
+            client_socket.close()
+            sys.exit("Has salido del chat.")
+
+        # Esperar la respuesta del servidor y manejar los comandos
+        response = handle_commands(message, client_socket, [])
+
+        # Imprimir la respuesta del servidor
+        if response:
+            print(response)
+
+if __name__ == "__main__":
+    main()

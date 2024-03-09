@@ -1,5 +1,6 @@
 from socket import *
 import threading
+from commands import handle_commands, handle_list_command
 
 server_ip = "localhost"
 server_port = 9069
@@ -16,25 +17,37 @@ def handle_client(client_socket, client_address):
     client_name = client_socket.recv(1024).decode()
     print(f"{client_name} has joined the chat")
 
-    while True:
-        message = client_socket.recv(1024).decode()
-        if  message =="exit": # Handle disconnection
-            print(f"{client_name} has left the chat")
-            clients.remove(client_socket)
-            client_socket.close()
-            break
-        
-        elif message == "/LIST":  # Handle list command
-            client_socket.send("Connected users:\n".encode())
-            for client in clients:
-                client_socket.send(f"- {client.decode()}\n".encode())
-        else:  # Regular message
-            print(f" {message}")
-            for client in clients:
-                if client != client_socket:
-                    client.send(message.encode())
+    # Agregar el nombre del cliente a la lista de clientes
+    clients.append((client_socket, client_name))
+
+    try:
+        while True:
+            message = client_socket.recv(1024).decode()
+            if not message:
+                break
+
+            if message.lower() == "/exit":
+                break
+
+            response = handle_commands(message, client_socket, clients)
+            if response:
+                client_socket.send(response.encode())  # Send response to the client
+            else:
+                # Send the received message to all other clients
+                broadcast_message = f"{client_name}: {message}"
+                print(broadcast_message)
+                for client in clients:
+                    if client[0] != client_socket:  # Compare sockets
+                        client[0].send(broadcast_message.encode())
+
+    except ConnectionResetError:
+        print(f"Connection with {client_name} has been terminated.")
+    
+    print(f"{client_name} has left the chat")
+    # Eliminar el cliente de la lista de clientes
+    clients.remove((client_socket, client_name))
+    client_socket.close()
 
 while True:
     client_socket, client_address = server_socket.accept()
-    clients.append(client_socket)
     threading.Thread(target=handle_client, args=(client_socket, client_address)).start()
