@@ -1,6 +1,7 @@
 from socket import *
 import sys
 
+
 server_ip = "localhost"
 server_port = 9069
 client_name = input("Ingrese su nombre: ")

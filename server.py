@@ -1,6 +1,6 @@
 from socket import *
 
-server_adress = ""
+server_adress = "localhost"
 server_port = 9069
 
 #creating a new socket
