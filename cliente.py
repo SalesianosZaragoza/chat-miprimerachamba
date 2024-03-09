@@ -11,13 +11,15 @@ client_socket.connect((server_ip, server_port))
 client_socket.send(client_name.encode())
 
 while True:
-    # write message
     message = input("Pon tu mensaje :")
     if message != "exit":
-        # send the message
-        client_socket.send(f": {message}".encode())
+        client_socket.send(f"{client_name}: {message}".encode())
+    elif message == "/LIST":
+        client_socket.send(message.encode())
+        response = client_socket.recv(1024).decode()
+        print(response)
+        
     else:
         client_socket.send(message.encode())
-        # close connection
         client_socket.close()
         sys.exit()

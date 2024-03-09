@@ -18,15 +18,21 @@ def handle_client(client_socket, client_address):
 
     while True:
         message = client_socket.recv(1024).decode()
-        if message == "exit" or not message:
+        if  message =="exit": # Handle disconnection
             print(f"{client_name} has left the chat")
             clients.remove(client_socket)
             client_socket.close()
             break
-        print(f"{client_name} {message}")
-        for client in clients:
-            if client != client_socket:
-                client.send(message.encode())
+        
+        elif message == "/LIST":  # Handle list command
+            client_socket.send("Connected users:\n".encode())
+            for client in clients:
+                client_socket.send(f"- {client.decode()}\n".encode())
+        else:  # Regular message
+            print(f" {message}")
+            for client in clients:
+                if client != client_socket:
+                    client.send(message.encode())
 
 while True:
     client_socket, client_address = server_socket.accept()
