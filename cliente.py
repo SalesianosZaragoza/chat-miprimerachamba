@@ -2,7 +2,6 @@ from socket import *
 import sys
 import threading
 import select
-from commands import handle_commands
 
 def receive_messages(client_socket):
     while True:
@@ -16,6 +15,10 @@ def receive_messages(client_socket):
         except ConnectionResetError:
             print("Conexión perdida con el servidor.")
             break
+        except ConnectionAbortedError:
+            print("")
+            break
+
 
 def main():
     server_ip = "localhost"
@@ -36,11 +39,13 @@ def main():
     client_socket.send(client_name.encode())
 
     # Iniciar un hilo para recibir mensajes del servidor
-    threading.Thread(target=receive_messages, args=(client_socket,), daemon=True).start()
+    receive_thread = threading.Thread(target=receive_messages, args=(client_socket,))
+    receive_thread.daemon = True
+    receive_thread.start()
 
     while True:
         # Leer el mensaje del usuario
-        user_message = input("Ingrese su mensaje: ")
+        user_message = input(f"\n{client_name}: ")
 
         # Enviar el mensaje al servidor
         client_socket.send(user_message.encode())
@@ -48,7 +53,10 @@ def main():
         # Verificar si el usuario quiere salir del chat
         if user_message.lower() == "/exit":
             client_socket.close()
-            sys.exit("Has salido del chat.")
+            # Esperar a que el hilo de recepción termine antes de salir
+            receive_thread.join()
+            print("Has salido del chat.")
+            break
 
 if __name__ == "__main__":
     main()
