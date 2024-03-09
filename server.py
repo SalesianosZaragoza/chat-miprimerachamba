@@ -40,6 +40,20 @@ def handle_client(client_socket, client_address, clients):
             message = client_socket.recv(1024).decode()
             if not message:
                 break
+            # El funcionamiento del /help
+            if message.lower() == "/help":
+                help_message = (
+                    "-/list : Te muestra la lista de personas conectadas al server\n"
+                    "-/create <nombrecanal> crea un canal\n"
+                    "-/connect <nombrecanal> : conectarse a un canal\n"
+                    "-/join <nombrecanal> : conectarse a un canal\n"
+                    "-/msg <nombreusuario> para escribir por privado a una persona\n"
+                    "-/quit <nombrecanal> para salir de un canal\n"
+                    "-/name <nombre> : para cambiarse el nombre\n"
+                    "-/kick <nombrecanal> <nombrepersona> para echar a alguien de un canal\n"
+                    "-/exit : para salirse del chat programa\n"
+                )
+                client_socket.send(help_message.encode())
 
             if message.lower() == "/exit":
                 break

@@ -10,6 +10,9 @@ def receive_messages(client_socket):
             if not message:
                 print("Conexión perdida con el servidor.")
                 break
+            if message.lower().startswith("/help"):
+                # Si el mensaje es de ayuda, no lo imprimimos aquí
+                continue
             print(message)
         except ConnectionResetError:
             print("Conexión perdida con el servidor.")
@@ -64,6 +67,8 @@ def main():
             receive_thread.join()
             print("Has salido del chat.")
             break
+        
+        
 
 if __name__ == "__main__":
     main()
