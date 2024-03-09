@@ -19,6 +19,14 @@ def handle_list_command(client_socket, clients):
     print("Connected clients:", connected_clients)
     return connected_clients
 
+def handle_private_message(client_socket, sender_name, recipient_name, message):
+    for client in clients:
+        if client[1] == recipient_name:
+            private_message = f"\n[Private from {sender_name}]: {message}"
+            client[0].send(private_message.encode())
+            return
+    client_socket.send("El usuario especificado no está conectado o no es válido.".encode())
+
 def handle_client(client_socket, client_address, clients):
     print(f"Accepted connection from {client_address}")
     client_name = client_socket.recv(1024).decode()
@@ -39,6 +47,14 @@ def handle_client(client_socket, client_address, clients):
             if message.lower() == "/list":
                 response = handle_list_command(client_socket, clients)
                 client_socket.send("\n".join(response).encode())
+            elif message.startswith("/msg"):
+                parts = message.split(" ", 2)
+                if len(parts) == 3:
+                    recipient_name = parts[1]
+                    private_message = parts[2]
+                    handle_private_message(client_socket, client_name, recipient_name, private_message)
+                else:
+                    client_socket.send("Comando mal formado. Uso: /msg (usuario) (mensaje)".encode())
             else:
                 # Send the received message to all other clients
                 broadcast_message = f"\n{client_name}: {message}"
@@ -58,4 +74,3 @@ def handle_client(client_socket, client_address, clients):
 while True:
     client_socket, client_address = server_socket.accept()
     threading.Thread(target=handle_client, args=(client_socket, client_address, clients)).start()
- 

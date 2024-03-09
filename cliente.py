@@ -1,7 +1,6 @@
 from socket import *
 import sys
 import threading
-import select
 
 def receive_messages(client_socket):
     while True:
@@ -18,7 +17,6 @@ def receive_messages(client_socket):
         except ConnectionAbortedError:
             print("")
             break
-
 
 def main():
     server_ip = "localhost"
@@ -46,7 +44,16 @@ def main():
     while True:
         # Leer el mensaje del usuario
         user_message = input(f"\n{client_name}: ")
-
+        if user_message.lower().startswith("/msg"):
+            parts = user_message.split(" ", 2)
+            if len(parts) == 3:
+                recipient_name = parts[1]
+                private_message = parts[2]
+                user_message = f"/msg {recipient_name} {private_message}"
+            else:
+                print("Comando mal formado. Uso: /msg (usuario) (mensaje)")
+                continue
+        
         # Enviar el mensaje al servidor
         client_socket.send(user_message.encode())
 
@@ -60,4 +67,3 @@ def main():
 
 if __name__ == "__main__":
     main()
- 
