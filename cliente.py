@@ -15,7 +15,7 @@ while True:
     message = input("Pon tu mensaje :")
     if message != "exit":
         # send the message
-        client_socket.send(f"{client_name}: {message}".encode())
+        client_socket.send(f": {message}".encode())
     else:
         client_socket.send(message.encode())
         # close connection

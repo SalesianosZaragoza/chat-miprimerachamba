@@ -23,7 +23,7 @@ def handle_client(client_socket, client_address):
             clients.remove(client_socket)
             client_socket.close()
             break
-        print(f"{client_name}: {message}")
+        print(f"{client_name} {message}")
         for client in clients:
             if client != client_socket:
                 client.send(message.encode())
