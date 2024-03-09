@@ -1,6 +1,6 @@
 from socket import *
 import threading
-from commands import handle_commands, handle_list_command
+from commands import handle_commands
 
 server_ip = "localhost"
 server_port = 9069
@@ -12,7 +12,7 @@ print("Server listening on port", server_port)
 
 clients = []
 
-def handle_client(client_socket, client_address):
+def handle_client(client_socket, client_address, clients):
     print(f"Accepted connection from {client_address}")
     client_name = client_socket.recv(1024).decode()
     print(f"{client_name} has joined the chat")
@@ -29,9 +29,10 @@ def handle_client(client_socket, client_address):
             if message.lower() == "/exit":
                 break
 
-            response = handle_commands(message, client_socket, clients)
-            if response:
-                client_socket.send(response.encode())  # Send response to the client
+            if message.startswith("/"):
+                response = handle_commands(message, client_socket, clients)
+                if response:
+                    client_socket.send(response.encode())  # Send response to the client
             else:
                 # Send the received message to all other clients
                 broadcast_message = f"{client_name}: {message}"
@@ -50,4 +51,4 @@ def handle_client(client_socket, client_address):
 
 while True:
     client_socket, client_address = server_socket.accept()
-    threading.Thread(target=handle_client, args=(client_socket, client_address)).start()
+    threading.Thread(target=handle_client, args=(client_socket, client_address, clients)).start()
