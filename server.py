@@ -1,30 +1,60 @@
 from socket import *
+import threading
 
-server_adress = "localhost"
+server_ip = "localhost"
 server_port = 9069
 
-#creating a new socket
-server_socket = socket(AF_INET,SOCK_STREAM)
-#
-server_socket.bind((server_adress,server_port))
-server_socket.listen()
+server_socket = socket(AF_INET, SOCK_STREAM)
+server_socket.bind((server_ip, server_port))
+server_socket.listen(5)
+print("Server listening on port", server_port)
+
+clients = []
+
+def handle_list_command(client_socket, clients):
+    connected_clients = []
+    print("Total clients connected:", len(clients))
+    for client in clients:
+        connected_clients.append(client[1])  # El nombre del cliente es el segundo elemento de la tupla
+    print("Connected clients:", connected_clients)
+    return connected_clients
+
+def handle_client(client_socket, client_address, clients):
+    print(f"Accepted connection from {client_address}")
+    client_name = client_socket.recv(1024).decode()
+    print(f"{client_name} has joined the chat")
+
+    # Agregar el nombre del cliente a la lista de clientes
+    clients.append((client_socket, client_name))
+
+    try:
+        while True:
+            message = client_socket.recv(1024).decode()
+            if not message:
+                break
+
+            if message.lower() == "/exit":
+                break
+
+            if message.lower() == "/list":
+                response = handle_list_command(client_socket, clients)
+                client_socket.send("\n".join(response).encode())
+            else:
+                # Send the received message to all other clients
+                broadcast_message = f"\n{client_name}: {message}"
+                print(broadcast_message)
+                for client in clients:
+                    if client[0] != client_socket:  # Compare sockets
+                        client[0].send(broadcast_message.encode())
+
+    except ConnectionResetError:
+        print(f"Connection with {client_name} has been terminated.")
+    
+    print(f"{client_name} has left the chat")
+    # Eliminar el cliente de la lista de clientes
+    clients.remove((client_socket, client_name))
+    client_socket.close()
 
 while True:
-    socket_conection, client_adress = server_socket.accept()
-    client_name= socket_conection.recv(1024).decode()
-
-    print("conectado con ",client_name,client_adress)
-    
-    while True: 
-        message = socket_conection.recv(1024).decode()
-
-        if message == "exit":
-            break
-        
-        print(f"{client_name}: {message}")
-
-        #send the message to the client
-        socket_conection.send(input().encode())
-    print("desconectado con un cliente. ",client_adress)
-    #close conection
-    socket_conection.close()
+    client_socket, client_address = server_socket.accept()
+    threading.Thread(target=handle_client, args=(client_socket, client_address, clients)).start()
