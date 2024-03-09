@@ -15,7 +15,7 @@ while True:
 
     print("conectado con ",client_name,client_adress)
     
-    while True:
+    while True: 
         message = socket_conection.recv(1024).decode()
 
         if message == "exit":

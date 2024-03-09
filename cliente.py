@@ -26,4 +26,4 @@ while True:
         client_socket.send(message.encode())
         #close conection
         client_socket.close()
-        sys.exit()
+        sys.exit() 
