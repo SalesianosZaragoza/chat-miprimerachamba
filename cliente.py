@@ -56,12 +56,21 @@ def main():
             else:
                 print("Comando mal formado. Uso: /msg (usuario) (mensaje)")
                 continue
+        if user_message.lower().startswith("/name"):
+            parts = user_message.split(" ", 1)
+            if len(parts) == 2:
+                new_name = parts[1]
+                user_message = f"/name {new_name}"
+                client_name = new_name  # Actualizar el nombre del cliente localmente
+            else:
+                print("Comando mal formado. Uso: /name (nuevo_nombre)")
+                continue
         
         # Enviar el mensaje al servidor
         client_socket.send(user_message.encode())
 
         # Verificar si el usuario quiere salir del chat
-        if user_message.lower() == "/exit":
+        if user_message.lower() in ["/exit", "/quit"]:
             client_socket.close()
             # Esperar a que el hilo de recepción termine antes de salir
             receive_thread.join()
