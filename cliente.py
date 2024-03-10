@@ -35,6 +35,7 @@ def receive_messages(client_socket):
 def main():
     server_ip = "192.168.1.44"
     server_port = 9069
+    client_name = input("Ingrese su nombre: ")
     client_socket = socket(AF_INET, SOCK_STREAM)
     
     try:
@@ -43,16 +44,7 @@ def main():
         print("Error al conectar al servidor:", e)
         sys.exit(1)
 
-    while True:
-        client_name = input("Ingrese su nombre: ")
-        client_socket.send(client_name.encode())
-
-        response = client_socket.recv(1024).decode()
-        if response == "OK":
-            print("¡Te has unido al chat!")
-            break
-        else:
-            print(response)
+    client_socket.send(client_name.encode())
 
     receive_thread = threading.Thread(target=receive_messages, args=(client_socket,))
     receive_thread.daemon = True
