@@ -40,10 +40,19 @@ def handle_name_command(client_socket, clients, old_name, new_name):
 
 def handle_client(client_socket, client_address, clients):
     print(f"Conexion aceptada desde {client_address}")
-    client_name = client_socket.recv(1024).decode()
+    
+    while True:
+        client_name = client_socket.recv(1024).decode()
+        
+        if any(client[1] == client_name for client in clients):
+            client_socket.send("El nombre de usuario ya está en uso. Por favor, elija otro nombre: ".encode())
+        else:
+            client_socket.send("OK".encode())  # Confirmar al cliente que se ha unido al chat
+            break
+    
     print(f"{client_name} se ha unido al chat")
     clients.append((client_socket, client_name))
-
+    
     try:
         while True:
             message = client_socket.recv(1024).decode()
@@ -74,7 +83,8 @@ def handle_client(client_socket, client_address, clients):
                 if len(parts) == 2:
                     new_name = parts[1]
                     response = handle_name_command(client_socket, clients, client_name, new_name)
-                    client_name = new_name
+                    if response.startswith("Nombre cambiado"):
+                        client_name = new_name
                     client_socket.send(response.encode())
                 else:
                     client_socket.send("Comando mal formado. Usa: /name (nuevo_nombre)".encode())
