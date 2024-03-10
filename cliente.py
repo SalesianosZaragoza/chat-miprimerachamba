@@ -33,7 +33,7 @@ def receive_messages(client_socket):
             break
 
 def main():
-    server_ip = "localhost"
+    server_ip = "192.168.1.44"
     server_port = 9069
     client_name = input("Ingrese su nombre: ")
     client_socket = socket(AF_INET, SOCK_STREAM)

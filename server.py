@@ -101,7 +101,7 @@ def handle_client(client_socket, client_address, clients):
     client_socket.close()
 
 def main():
-    server_ip = "localhost"
+    server_ip = "192.168.1.44"
     server_port = 9069
     server_socket = socket(AF_INET, SOCK_STREAM)
     server_socket.bind((server_ip, server_port))
