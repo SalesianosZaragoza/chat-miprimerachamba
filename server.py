@@ -1,8 +1,21 @@
 from socket import *
 import threading
+from enum import Enum
+
+class Commands(Enum):
+    LIST = "/list"
+    HELP = "/help"
+    CREATE = "/create"
+    CONNECT = "/connect"
+    JOIN = "/join"
+    MSG = "/msg"
+    QUIT = "/quit"
+    NAME = "/name"
+    KICK = "/kick"
+    EXIT = "/exit"
 
 def handle_list_command(client_socket, clients):
-    connected_clients = ["\nClientes conectados:"]
+    connected_clients = []
     print("Total de clientes conectados: ", len(clients))
     for client in clients:
         connected_clients.append("\n\033[32m\u25CF\033[0m " + client[1])
@@ -36,7 +49,7 @@ def handle_client(client_socket, client_address, clients):
             message = client_socket.recv(1024).decode()
             if not message:
                 break
-            if message.lower() == "/help":
+            if message.lower() == Commands.HELP.value:
                 help_message = (
                     "-/list : Te muestra la lista de personas conectadas al server\n"
                     "-/create <nombrecanal> crea un canal\n"
@@ -50,13 +63,13 @@ def handle_client(client_socket, client_address, clients):
                 )
                 client_socket.send(help_message.encode())
 
-            if message.lower() in ["/exit", "/quit"]:
+            if message.lower() in [Commands.EXIT.value, Commands.QUIT.value]:
                 break
 
-            if message.lower() == "/list":
+            if message.lower() == Commands.LIST.value:
                 response = handle_list_command(client_socket, clients)
                 client_socket.send(response.encode())
-            if message.startswith("/name"):
+            if message.startswith(Commands.NAME.value):
                 parts = message.split(" ", 1)
                 if len(parts) == 2:
                     new_name = parts[1]
@@ -65,7 +78,7 @@ def handle_client(client_socket, client_address, clients):
                     client_socket.send(response.encode())
                 else:
                     client_socket.send("Comando mal formado. Usa: /name (nuevo_nombre)".encode())
-            elif message.startswith("/msg"):
+            elif message.startswith(Commands.MSG.value):
                 parts = message.split(" ", 2)
                 if len(parts) == 3:
                     recipient_name = parts[1]
@@ -83,7 +96,7 @@ def handle_client(client_socket, client_address, clients):
     except ConnectionResetError:
         print(f"La conexión con {client_name} ha sido reiniciada por el cliente.")
     
-    print(f"{client_name} ha dejado el chat")
+    print(f"{client_name} ha abandonado el chat")
     clients.remove((client_socket, client_name))
     client_socket.close()
 
