@@ -23,7 +23,7 @@ def handle_list_command(client_socket, clients):
     connected_clients_str = "".join(connected_clients)
     return connected_clients_str
 
-def handle_private_message(client_socket, sender_name, recipient_name, message, clients):
+def handle_msg_command(client_socket, sender_name, recipient_name, message, clients):
     for client in clients:
         if client[1] == recipient_name:
             private_message = f"\n[Mensaje privado de {sender_name}]: {message}"
@@ -38,6 +38,20 @@ def handle_name_command(client_socket, clients, old_name, new_name):
             return f"Nombre cambiado de {old_name} a {new_name}"
     return "No se encontró el nombre de usuario especificado."
 
+def handle_help_command(client_socket):
+    help_message = (
+                    "-/list : Te muestra la lista de personas conectadas al server\n"
+                    "-/create <nombrecanal> crea un canal\n"
+                    "-/connect <nombrecanal> : conectarse a un canal\n"
+                    "-/join <nombrecanal> : conectarse a un canal\n"
+                    "-/msg <nombreusuario> para escribir por privado a una persona\n"
+                    "-/quit <nombrecanal> para salir de un canal\n"
+                    "-/name <nombre> : para cambiarse el nombre\n"
+                    "-/kick <nombrecanal> <nombrepersona> para echar a alguien de un canal\n"
+                    "-/exit : para salirse del chat programa\n"
+                )
+    client_socket.send(help_message.encode())
+
 def handle_client(client_socket, client_address, clients):
     print(f"Conexion aceptada desde {client_address}")
     client_name = client_socket.recv(1024).decode()
@@ -50,18 +64,7 @@ def handle_client(client_socket, client_address, clients):
             if not message:
                 break
             if message.lower() == Commands.HELP.value:
-                help_message = (
-                    "-/list : Te muestra la lista de personas conectadas al server\n"
-                    "-/create <nombrecanal> crea un canal\n"
-                    "-/connect <nombrecanal> : conectarse a un canal\n"
-                    "-/join <nombrecanal> : conectarse a un canal\n"
-                    "-/msg <nombreusuario> para escribir por privado a una persona\n"
-                    "-/quit <nombrecanal> para salir de un canal\n"
-                    "-/name <nombre> : para cambiarse el nombre\n"
-                    "-/kick <nombrecanal> <nombrepersona> para echar a alguien de un canal\n"
-                    "-/exit : para salirse del chat programa\n"
-                )
-                client_socket.send(help_message.encode())
+                handle_help_command(client_socket)
 
             if message.lower() in [Commands.EXIT.value, Commands.QUIT.value]:
                 break
@@ -69,6 +72,7 @@ def handle_client(client_socket, client_address, clients):
             if message.lower() == Commands.LIST.value:
                 response = handle_list_command(client_socket, clients)
                 client_socket.send(response.encode())
+                
             if message.startswith(Commands.NAME.value):
                 parts = message.split(" ", 1)
                 if len(parts) == 2:
@@ -78,12 +82,13 @@ def handle_client(client_socket, client_address, clients):
                     client_socket.send(response.encode())
                 else:
                     client_socket.send("Comando mal formado. Usa: /name (nuevo_nombre)".encode())
+                    
             elif message.startswith(Commands.MSG.value):
                 parts = message.split(" ", 2)
                 if len(parts) == 3:
                     recipient_name = parts[1]
                     private_message = parts[2]
-                    handle_private_message(client_socket, client_name, recipient_name, private_message, clients)
+                    handle_msg_command(client_socket, client_name, recipient_name, private_message, clients)
                 else:
                     client_socket.send("Comando mal formado. Usa: /msg (usuario) (mensaje)".encode())
             else:

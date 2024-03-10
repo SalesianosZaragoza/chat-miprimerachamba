@@ -61,6 +61,7 @@ def main():
             else:
                 print("Comando mal formado. Uso: /msg (usuario) (mensaje)")
                 continue
+            
         if user_message.lower().startswith(Commands.NAME.value):
             parts = user_message.split(" ", 1)
             if len(parts) == 2:
