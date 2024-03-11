@@ -13,14 +13,15 @@ class Commands(Enum):
     NAME = "/name"
     KICK = "/kick"
     EXIT = "/exit"
+    COLOR = "/color"
 
 def handle_list_command(client_socket, clients):
-    connected_clients = ["\n\nClientes conectados: "]
+    connected_clients = ["Clientes conectados: "]
     print("Total de clientes conectados: ", len(clients))
     for client in clients:
         connected_clients.append("\n\033[32m\u25CF\033[0m " + client[1])
         print("\033[32m\u25CF\033[0m", client[1])
-    connected_clients_str = "".join(connected_clients)
+    connected_clients_str = "".join(connected_clients) + "\n"
     return connected_clients_str
 
 def handle_msg_command(client_socket, sender_name, recipient_name, message, clients):
@@ -36,6 +37,13 @@ def handle_name_command(client_socket, clients, old_name, new_name):
         if client[1] == old_name:
             clients[i] = (client_socket, new_name)
             return f"Nombre cambiado de {old_name} a {new_name}"
+    return "No se encontró el nombre de usuario especificado."
+
+def handle_color_command(client_socket, clients, client_name, color):
+    for i, client in enumerate(clients):
+        if client[1] == client_name:
+            clients[i] = (client_socket, client_name, color)
+            return f"Color cambiado a {color}"
     return "No se encontró el nombre de usuario especificado."
 
 def handle_help_command(client_socket):
@@ -92,7 +100,7 @@ def handle_client(client_socket, client_address, clients):
                 else:
                     client_socket.send("Comando mal formado. Usa: /msg (usuario) (mensaje)".encode())
             else:
-                broadcast_message = f"\n{client_name}: {message}"
+                broadcast_message = f"{client_name}: {message}"
                 print(broadcast_message)
                 for client in clients:
                     if client[0] != client_socket:

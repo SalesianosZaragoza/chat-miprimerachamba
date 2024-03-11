@@ -2,6 +2,7 @@ from socket import *
 import sys
 import threading
 from enum import Enum
+from colorama import Fore
 
 class Commands(Enum):
     LIST = "/list"
@@ -14,8 +15,10 @@ class Commands(Enum):
     NAME = "/name"
     KICK = "/kick"
     EXIT = "/exit"
+    COLOR = "/color"
 
 def receive_messages(client_socket):
+    # Importar colorama aquí...
     while True:
         try:
             message = client_socket.recv(1024).decode()
@@ -24,13 +27,26 @@ def receive_messages(client_socket):
                 break
             if message.lower().startswith(Commands.HELP.value):
                 continue
-            print(message)
+            if message.startswith("[Mensaje privado"):
+                print(Fore.MAGENTA + message + Fore.RESET)
+                continue
+            # Obtener nombre y posiblemente el color del mensaje
+            parts = message.split(":", 2)
+            if len(parts) == 2:
+                name, content = parts
+                print(Fore.BLUE + f"{name}:" + Fore.RESET + content)
+            elif len(parts) == 3:
+                name, color, content = parts
+                print(color + f"{name}:" + Fore.RESET + content)
+            else:
+                print("", message)
         except ConnectionResetError:
             print("Conexión perdida con el servidor.")
             break
         except ConnectionAbortedError:
             print("")
             break
+
 
 def main():
     server_ip = "192.168.1.44"
@@ -70,6 +86,15 @@ def main():
                 client_name = new_name
             else:
                 print("Comando mal formado. Uso: /name (nuevo_nombre)")
+                continue
+            
+        elif user_message.lower().startswith(Commands.COLOR.value):
+            parts = user_message.split(" ", 2)
+            if len(parts) == 2:
+                color = parts[1]
+                user_message = f"{Commands.COLOR.value} {color}"
+            else:
+                print("Comando mal formado. Uso: /color (color)")
                 continue
         
         client_socket.send(user_message.encode())
