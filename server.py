@@ -27,7 +27,7 @@ def handle_list_command(client_socket, clients):
 def handle_msg_command(client_socket, sender_name, recipient_name, message, clients):
     for client in clients:
         if client[1] == recipient_name:
-            private_message = f"\n[Mensaje privado de {sender_name}]: {message}"
+            private_message = f"[Mensaje privado de {sender_name}]: {message}"
             client[0].send(private_message.encode())
             return
     client_socket.send("El usuario especificado no está conectado o no es válido.".encode())
@@ -61,16 +61,22 @@ def handle_help_command(client_socket):
     client_socket.send(help_message.encode())
 
 def handle_create_command(client_socket, channel_name, channels, client_name):
+    for channel, members in channels.items():
+        if client_name in members:
+            members.remove(client_name)
     if channel_name not in channels:
-        channels[channel_name] = []
-        channels[channel_name].append(client_name)
-        return f"Canal '{channel_name}' creado. Te has unido al canal '{channel_name}'."
+        channels[channel_name] = [client_name]  # Crear el nuevo canal y agregar al cliente
+        return f"Canal '{channel_name}' creado. Te has unido al canal '{channel_name}'.\n"
     else:
         return "El canal ya existe."
+
 
 def handle_join_command(client_socket, channel_name, channels, client_name):
     if channel_name in channels:
         if client_name not in channels[channel_name]:
+            for channel, members in channels.items():
+                if client_name in members:
+                    members.remove(client_name)
             channels[channel_name].append(client_name)
             return f"Te has unido al canal '{channel_name}'."
         else:
@@ -83,7 +89,14 @@ def handle_client(client_socket, client_address, clients, channels):
     client_name = client_socket.recv(1024).decode()
     print(f"{client_name} se ha unido al chat")
     clients.append((client_socket, client_name))
+    
+    if "general" not in channels:
+        channels["general"] = []
+    channels["general"].append(client_name)
 
+    welcome_message = "¡Bienvenido al chat! Unete a un canal mediante /create <nombre_canal> o /join <nombre_canal_existente> para comenzar.\n"
+    client_socket.send(welcome_message.encode())
+    
     try:
         while True:
             message = client_socket.recv(1024).decode()
@@ -152,7 +165,9 @@ def handle_client(client_socket, client_address, clients, channels):
     clients.remove((client_socket, client_name))
     for channel, members in channels.items():
         if client_name in members:
-            members.remove(client_name)
+            for member_socket, member_name in clients:
+                if member_name in members and member_socket != client_socket:
+                    member_socket.send(broadcast_message.encode())
     client_socket.close()
 
 def main():

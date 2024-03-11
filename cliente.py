@@ -17,8 +17,7 @@ class Commands(Enum):
     EXIT = "/exit"
     COLOR = "/color"
 
-def receive_messages(client_socket):
-    # Importar colorama aquí...
+def receive_messages(client_socket, client_name):
     while True:
         try:
             message = client_socket.recv(1024).decode()
@@ -30,14 +29,11 @@ def receive_messages(client_socket):
             if message.startswith("[Mensaje privado"):
                 print(Fore.MAGENTA + message + Fore.RESET)
                 continue
-            # Obtener nombre y posiblemente el color del mensaje
-            parts = message.split(":", 2)
+            parts = message.split(":", 1)
             if len(parts) == 2:
                 name, content = parts
-                print(Fore.BLUE + f"{name}:" + Fore.RESET + content)
-            elif len(parts) == 3:
-                name, color, content = parts
-                print(color + f"{name}:" + Fore.RESET + content)
+                if name != client_name:
+                    print(Fore.BLUE + f"{name}:" + Fore.RESET + content)
             else:
                 print("", message)
         except ConnectionResetError:
@@ -46,7 +42,6 @@ def receive_messages(client_socket):
         except ConnectionAbortedError:
             print("")
             break
-
 
 def main():
     server_ip = "192.168.1.44"
@@ -62,12 +57,12 @@ def main():
 
     client_socket.send(client_name.encode())
 
-    receive_thread = threading.Thread(target=receive_messages, args=(client_socket,))
+    receive_thread = threading.Thread(target=receive_messages, args=(client_socket, client_name))
     receive_thread.daemon = True
     receive_thread.start()
 
     while True:
-        user_message = input(f"")
+        user_message = input("")
         if user_message.lower().startswith(Commands.MSG.value):
             parts = user_message.split(" ", 2)
             if len(parts) == 3:
@@ -106,17 +101,14 @@ def main():
                 print("Comando mal formado. Uso: /create (nombre_canal)")
                 continue
 
-        # Enviar comando JOIN al servidor
-        if user_message.lower().startswith(Commands.JOIN.value):
-            parts = user_message.split(" ", 1)
-            if len(parts) == 2:
-                channel_name = parts[1]
-                user_message = f"{Commands.JOIN.value} {channel_name}"
-            else:
-                print("Comando mal formado. Uso: /join (nombre_canal)")
-                continue
+        if user_message.lower() in [Commands.EXIT.value, Commands.QUIT.value]:
+            client_socket.close()
+            receive_thread.join()
+            print("Has salido del chat.")
+            break
         
         client_socket.send(user_message.encode())
+
 
         if user_message.lower() in [Commands.EXIT.value, Commands.QUIT.value]:
             client_socket.close()
