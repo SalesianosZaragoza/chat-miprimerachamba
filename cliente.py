@@ -51,7 +51,7 @@ def main():
     receive_thread.start()
 
     while True:
-        user_message = input(f"\n{client_name}: ")
+        user_message = input(f"")
         if user_message.lower().startswith(Commands.MSG.value):
             parts = user_message.split(" ", 2)
             if len(parts) == 3:
