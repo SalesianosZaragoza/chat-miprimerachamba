@@ -60,7 +60,25 @@ def handle_help_command(client_socket):
                 )
     client_socket.send(help_message.encode())
 
-def handle_client(client_socket, client_address, clients):
+def handle_create_command(client_socket, channel_name, channels, client_name):
+    if channel_name not in channels:
+        channels[channel_name] = []
+        channels[channel_name].append(client_name)
+        return f"Canal '{channel_name}' creado. Te has unido al canal '{channel_name}'."
+    else:
+        return "El canal ya existe."
+
+def handle_join_command(client_socket, channel_name, channels, client_name):
+    if channel_name in channels:
+        if client_name not in channels[channel_name]:
+            channels[channel_name].append(client_name)
+            return f"Te has unido al canal '{channel_name}'."
+        else:
+            return f"Ya estás en el canal '{channel_name}'."
+    else:
+        return "El canal especificado no existe."
+
+def handle_client(client_socket, client_address, clients, channels):
     print(f"Conexion aceptada desde {client_address}")
     client_name = client_socket.recv(1024).decode()
     print(f"{client_name} se ha unido al chat")
@@ -99,18 +117,42 @@ def handle_client(client_socket, client_address, clients):
                     handle_msg_command(client_socket, client_name, recipient_name, private_message, clients)
                 else:
                     client_socket.send("Comando mal formado. Usa: /msg (usuario) (mensaje)".encode())
+                    
+            elif message.lower().startswith(Commands.CREATE.value):
+                parts = message.split(" ", 1)
+                if len(parts) == 2:
+                    channel_name = parts[1]
+                    response = handle_create_command(client_socket, channel_name, channels, client_name)
+                    client_socket.send(response.encode())
+                else:
+                    client_socket.send("Comando mal formado. Usa: /create (nombre_canal)".encode())
+
+            elif message.lower().startswith(Commands.JOIN.value):
+                parts = message.split(" ", 1)
+                if len(parts) == 2:
+                    channel_name = parts[1]
+                    response = handle_join_command(client_socket, channel_name, channels, client_name)
+                    client_socket.send(response.encode())
+                else:
+                    client_socket.send("Comando mal formado. Usa: /join (nombre_canal)".encode())
+                    
             else:
                 broadcast_message = f"{client_name}: {message}"
                 print(broadcast_message)
-                for client in clients:
-                    if client[0] != client_socket:
-                        client[0].send(broadcast_message.encode())
+                for channel, members in channels.items():
+                    if client_name in members:
+                        for member_socket, member_name in clients:
+                            if member_name in members:
+                                member_socket.send(broadcast_message.encode())
 
     except ConnectionResetError:
         print(f"La conexión con {client_name} ha sido reiniciada por el cliente.")
     
     print(f"{client_name} ha abandonado el chat")
     clients.remove((client_socket, client_name))
+    for channel, members in channels.items():
+        if client_name in members:
+            members.remove(client_name)
     client_socket.close()
 
 def main():
@@ -121,10 +163,11 @@ def main():
     server_socket.listen(5)
     print("Server usa el puerto", server_port)
     clients = []
+    channels = {}
 
     while True:
         client_socket, client_address = server_socket.accept()
-        threading.Thread(target=handle_client, args=(client_socket, client_address, clients)).start()
+        threading.Thread(target=handle_client, args=(client_socket, client_address, clients, channels)).start()
 
 if __name__ == "__main__":
     main()

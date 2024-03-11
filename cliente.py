@@ -88,13 +88,32 @@ def main():
                 print("Comando mal formado. Uso: /name (nuevo_nombre)")
                 continue
             
-        elif user_message.lower().startswith(Commands.COLOR.value):
+        if user_message.lower().startswith(Commands.COLOR.value):
             parts = user_message.split(" ", 2)
             if len(parts) == 2:
                 color = parts[1]
                 user_message = f"{Commands.COLOR.value} {color}"
             else:
                 print("Comando mal formado. Uso: /color (color)")
+                continue
+            
+        if user_message.lower().startswith(Commands.CREATE.value):
+            parts = user_message.split(" ", 1)
+            if len(parts) == 2:
+                channel_name = parts[1]
+                user_message = f"{Commands.CREATE.value} {channel_name}"
+            else:
+                print("Comando mal formado. Uso: /create (nombre_canal)")
+                continue
+
+        # Enviar comando JOIN al servidor
+        if user_message.lower().startswith(Commands.JOIN.value):
+            parts = user_message.split(" ", 1)
+            if len(parts) == 2:
+                channel_name = parts[1]
+                user_message = f"{Commands.JOIN.value} {channel_name}"
+            else:
+                print("Comando mal formado. Uso: /join (nombre_canal)")
                 continue
         
         client_socket.send(user_message.encode())
