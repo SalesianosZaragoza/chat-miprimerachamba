@@ -15,7 +15,7 @@ class Commands(Enum):
     EXIT = "/exit"
 
 def handle_list_command(client_socket, clients):
-    connected_clients = []
+    connected_clients = ["\n\nClientes conectados: "]
     print("Total de clientes conectados: ", len(clients))
     for client in clients:
         connected_clients.append("\n\033[32m\u25CF\033[0m " + client[1])
