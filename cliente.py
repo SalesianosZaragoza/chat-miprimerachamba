@@ -57,7 +57,7 @@ def main():
     except Exception as e:
         print("Error al conectar al servidor:", e)
         sys.exit(1)
-
+    
     client_socket.send(client_name.encode())
 
     receive_thread = threading.Thread(target=receive_messages, args=(client_socket, client_name))

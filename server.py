@@ -45,12 +45,12 @@ def handle_msg_command(client_socket, sender_name, recipient_name, message, clie
 
 
 
-def handle_name_command(client_socket, clients, old_name, new_name): # si uso /name en un canal, no me deja enviar mensajes hasta que me cambie de canal
-    for i, client in enumerate(clients):
-        if client[1] == old_name:
-            clients[i] = (client_socket, new_name)
-            return f"Nombre cambiado de \033[31m{old_name}\033[0m a \033[36m{new_name}\033[0m\n"
-    return "No se encontró el nombre de usuario especificado.\n"
+# def handle_name_command(client_socket, clients, old_name, new_name):
+#     for i, client in enumerate(clients):
+#         if client[1] == old_name:
+#             clients[i] = (client_socket, new_name)
+#             return f"Nombre cambiado de \033[31m{old_name}\033[0m a \033[36m{new_name}\033[0m\n"
+#     return "No se encontró el nombre de usuario especificado.\n"
 
 
 
@@ -127,7 +127,6 @@ def handle_kick_command(client_socket, channels, clients, client_name, channel_n
     if user_to_kick == client_name:
         return "No puedes expulsarte a ti mismo.\n"
     
-    # Si el usuario a expulsar está en el canal del cliente que ejecuta el comando
     if user_to_kick in channels[channel_name]:
         channels[channel_name].remove(user_to_kick)
         channels["general"].append(user_to_kick)
@@ -228,15 +227,15 @@ def handle_client(client_socket, client_address, clients, channels):
                 response = handle_list_command(client_socket, channels, clients)
                 client_socket.send(response.encode())
                 
-            if message.startswith(Commands.NAME.value):
-                parts = message.split(" ", 1)
-                if len(parts) == 2:
-                    new_name = parts[1]
-                    response = handle_name_command(client_socket, clients, client_name, new_name)
-                    client_name = new_name
-                    client_socket.send(response.encode())
-                else:
-                    client_socket.send("Comando mal formado. Usa: /name (nuevo_nombre)\n".encode())
+            # if message.startswith(Commands.NAME.value):
+            #     parts = message.split(" ", 1)
+            #     if len(parts) == 2:
+            #         new_name = parts[1]
+            #         response = handle_name_command(client_socket, clients, client_name, new_name)
+            #         client_name = new_name
+            #         client_socket.send(response.encode())
+            #     else:
+            #         client_socket.send("Comando mal formado. Usa: /name (nuevo_nombre)\n".encode())
                     
             elif message.startswith(Commands.MSG.value):
                 parts = message.split(" ", 2)
