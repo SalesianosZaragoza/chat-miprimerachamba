@@ -65,15 +65,15 @@ def handle_color_command(client_socket, clients, client_name, color):
 
 def handle_help_command(client_socket):
     help_message = (
-                    "-/list : Muestra la lista de personas conectadas al server y la lista de canales creados\n"
-                    "-/create <nombrecanal> crea un canal\n"
-                    "-/join <nombrecanal> : conectarse a un canal\n"
-                    "-/msg <nombreusuario> para escribir por privado a una persona\n"
-                    "-/quit <nombrecanal> para salir de un canal al general\n"
-                    "-/name <nombre> : para cambiarse el nombre\n"
-                    "-/kick <nombrecanal> <nombrepersona> para echar a alguien del canal que estas\n"
-                    "-/exit : para salirse del programa de chat\n"
-                )
+                        "\033[37m- /list : Muestra la lista de personas conectadas al servidor y la lista de canales creados\n"
+                        "- /create <nombrecanal> crea un canal\n"
+                        "- /join <nombrecanal> : conectarse a un canal\n"
+                        "- /msg <nombreusuario> para escribir por privado a una persona\n"
+                        "- /quit <nombrecanal> para salir de un canal al general\n"
+                        "- /name <nombre> : para cambiarse el nombre\n"
+                        "- /kick <nombrecanal> <nombrepersona> para echar a alguien del canal en el que estás\n"
+                        "- /exit : para salir del programa de chat\033[0m\n"
+                    )
     client_socket.send(help_message.encode())
 
 
@@ -115,6 +115,8 @@ def handle_quit_command(client_socket, channels, client_name):
         channels["general"].append(client_name)
         return f"Has abandonado tu canal, has sido redirigido al canal general.\n"
 
+
+
 def handle_kick_command(client_socket, channels, clients, client_name, channel_name, user_to_kick):
     if channel_name not in channels:
         return "El canal especificado no existe.\n"
@@ -139,7 +141,6 @@ def handle_kick_command(client_socket, channels, clients, client_name, channel_n
         expelled_message = f"\033[31m{user_to_kick}\033[0m ha sido expulsado del canal \033[36m{channel_name}\033[0m y redirigido al canal general.\n"
         return expelled_message
     
-    # Si el usuario a expulsar no está en el canal del cliente que ejecuta el comando
     else:
         for ch_name, members in channels.items():
             if user_to_kick in members:
@@ -180,6 +181,10 @@ def handle_remove_command(client_socket, channels, clients, client_name, channel
     expelled_users = channels.pop(channel_name, [])
     if expelled_users:
         for expelled_user in expelled_users:
+            for ch_name, members in channels.items():
+                if expelled_user in members:
+                    members.remove(expelled_user)
+            channels["general"].append(expelled_user)
             for client_socket_expelled, client_name_expelled in clients:
                 if client_name_expelled == expelled_user:
                     expelled_message = f"El canal \033[31m{channel_name}\033[0m ha sido eliminado y has sido redirigido al canal general.\n"
@@ -187,6 +192,7 @@ def handle_remove_command(client_socket, channels, clients, client_name, channel
                     break
     
     return f"El canal \033[31m{channel_name}\033[0m ha sido eliminado y todos los usuarios han sido expulsados al canal general.\n"
+
 
 
 
@@ -213,7 +219,7 @@ def handle_client(client_socket, client_address, clients, channels):
                 
             elif message.lower() in [Commands.EXIT.value]:
                 break
-            
+                
             elif message.lower() == Commands.QUIT.value:
                 response = handle_quit_command(client_socket, channels, client_name)
                 client_socket.send(response.encode())
@@ -258,7 +264,7 @@ def handle_client(client_socket, client_address, clients, channels):
                     client_socket.send(response.encode())
                 else:
                     client_socket.send("Comando mal formado. Usa: /join (nombre_canal)\n".encode())
-            
+
             elif message.lower().startswith(Commands.KICK.value):
                 parts = message.split(" ", 2)
                 if len(parts) == 3:
@@ -272,7 +278,7 @@ def handle_client(client_socket, client_address, clients, channels):
             elif message.lower().startswith(Commands.MYNAME.value):
                 response = handle_myname_command(client_socket, clients, client_name)
                 client_socket.send(response.encode())
-            
+
             elif message.lower().startswith(Commands.MYCHANNEL.value):
                 response = handle_mychannel_command(client_socket, channels, client_name)
                 client_socket.send(response.encode())
@@ -285,7 +291,7 @@ def handle_client(client_socket, client_address, clients, channels):
                     client_socket.send(response.encode())
                 else:
                     client_socket.send("Comando mal formado. Usa: /remove (nombre_canal)\n".encode())
-            
+                
             else:
                 broadcast_message = f"{client_name}: {message}"
                 print(broadcast_message)
