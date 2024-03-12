@@ -57,11 +57,10 @@ def handle_help_command(client_socket):
                     "-/msg <nombreusuario> para escribir por privado a una persona\n"
                     "-/quit <nombrecanal> para salir de un canal al general\n"
                     "-/name <nombre> : para cambiarse el nombre\n"
-                    "-/kick <nombrecanal> <nombrepersona> para echar a alguien de un canal\n"
+                    "-/kick <nombrecanal> <nombrepersona> para echar a alguien del canal que estas\n"
                     "-/exit : para salirse del chat programa\n"
                 )
     client_socket.send(help_message.encode())
-    
 
 def handle_create_command(client_socket, channel_name, channels, client_name):
     for channel, members in channels.items():
@@ -96,6 +95,32 @@ def handle_quit_command(client_socket, channels, client_name):
                 members.remove(client_name)
         channels["general"].append(client_name)
         return f"Has abandonado tu canal, has sido redirigido al canal general.\n"
+
+def handle_kick_command(client_socket, channels, clients, client_name, channel_name, user_to_kick):
+    if channel_name not in channels:
+        return "El canal especificado no existe."
+    
+    if client_name not in channels[channel_name]:
+        return "No estás en este canal."
+    
+    if user_to_kick == client_name:
+        return "No puedes expulsarte a ti mismo."
+    
+    if user_to_kick not in channels[channel_name]:
+        return "El usuario especificado no está en este canal."
+    
+    channels[channel_name].remove(user_to_kick)
+    channels["general"].append(user_to_kick)
+    
+    for client_socket_expelled, client_name_expelled in clients:
+        if client_name_expelled == user_to_kick:
+            message = f"Has sido expulsado del canal \033[36m{channel_name}\033[0m y redirigido al canal general."
+            client_socket_expelled.send(message.encode())
+            break
+    
+    expelled_message = f"\033[32m{user_to_kick}\033[0m ha sido expulsado del canal \033[36m{channel_name}\033[0m y redirigido al canal general.\n"
+    return expelled_message
+
 
 def handle_client(client_socket, client_address, clients, channels):
     print(f"Conexion aceptada desde {client_address}")
@@ -165,6 +190,16 @@ def handle_client(client_socket, client_address, clients, channels):
                     client_socket.send(response.encode())
                 else:
                     client_socket.send("Comando mal formado. Usa: /join (nombre_canal)".encode())
+            
+            elif message.lower().startswith(Commands.KICK.value):
+                parts = message.split(" ", 2)
+                if len(parts) == 3:
+                    channel_name = parts[1]
+                    user_to_kick = parts[2]
+                    response = handle_kick_command(client_socket, channels, clients, client_name, channel_name, user_to_kick)
+                    client_socket.send(response.encode())
+                else:
+                    client_socket.send("Comando mal formado. Usa: /kick (nombre_canal) (nombre_usuario)".encode())
                     
             else:
                 broadcast_message = f"{client_name}: {message}"
