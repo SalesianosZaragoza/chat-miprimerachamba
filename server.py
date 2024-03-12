@@ -15,15 +15,6 @@ class Commands(Enum):
     EXIT = "/exit"
     COLOR = "/color"
 
-# def handle_list_command(client_socket, clients):
-#     connected_clients = ["Clientes conectados: "]
-#     print("Total de clientes conectados: ", len(clients))
-#     for client in clients:
-#         connected_clients.append("\n\033[32m\u25CF\033[0m " + client[1])
-#         print("\033[32m\u25CF\033[0m", client[1])
-#     connected_clients_str = "".join(connected_clients) + "\n"
-#     return connected_clients_str
-
 def handle_list_command(client_socket, channels, clients):
     channels_list = ["\033[36mCanales y clientes conectados:\033[0m"]
     for channel, members in channels.items():
@@ -77,7 +68,7 @@ def handle_create_command(client_socket, channel_name, channels, client_name):
         if client_name in members:
             members.remove(client_name)
     if channel_name not in channels:
-        channels[channel_name] = [client_name]  # Crear el nuevo canal y agregar al cliente
+        channels[channel_name] = [client_name]
         return f"Canal '{channel_name}' creado. Te has unido al canal '{channel_name}'.\n"
     else:
         return "El canal ya existe."
