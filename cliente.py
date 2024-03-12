@@ -73,7 +73,7 @@ def main():
                 private_message = parts[2]
                 user_message = f"{Commands.MSG.value} {recipient_name} {private_message}"
             else:
-                print("Comando mal formado. Uso: /msg (usuario) (mensaje)")
+                print("Comando mal formado. Uso: /msg (usuario) (mensaje)\n")
                 continue
             
         if user_message.lower().startswith(Commands.NAME.value):
@@ -83,7 +83,7 @@ def main():
                 user_message = f"{Commands.NAME.value} {new_name}"
                 client_name = new_name
             else:
-                print("Comando mal formado. Uso: /name (nuevo_nombre)")
+                print("Comando mal formado. Uso: /name (nuevo_nombre)\n")
                 continue
             
         if user_message.lower().startswith(Commands.COLOR.value):
@@ -101,7 +101,7 @@ def main():
                 channel_name = parts[1]
                 user_message = f"{Commands.CREATE.value} {channel_name}"
             else:
-                print("Comando mal formado. Uso: /create (nombre_canal)")
+                print("Comando mal formado. Uso: /create (nombre_canal)\n")
                 continue
             
         if user_message.lower() == Commands.LIST.value:
