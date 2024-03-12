@@ -100,21 +100,17 @@ def main():
             else:
                 print("Comando mal formado. Uso: /create (nombre_canal)")
                 continue
-
-        if user_message.lower() in [Commands.EXIT.value, Commands.QUIT.value]:
+            
+        if user_message.lower() == Commands.QUIT.value:
+            user_message = Commands.QUIT.value
+        
+        if user_message.lower() == Commands.EXIT.value:
             client_socket.close()
             receive_thread.join()
             print("Has salido del chat.")
             break
         
         client_socket.send(user_message.encode())
-
-
-        if user_message.lower() in [Commands.EXIT.value, Commands.QUIT.value]:
-            client_socket.close()
-            receive_thread.join()
-            print("Has salido del chat.")
-            break
 
 if __name__ == "__main__":
     main()

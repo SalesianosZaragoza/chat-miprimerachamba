@@ -48,17 +48,17 @@ def handle_color_command(client_socket, clients, client_name, color):
 
 def handle_help_command(client_socket):
     help_message = (
-                    "-/list : Te muestra la lista de personas conectadas al server\n"
+                    "-/list : Te muestra la lista de personas conectadas al server y la lista de canales creados\n"
                     "-/create <nombrecanal> crea un canal\n"
-                    "-/connect <nombrecanal> : conectarse a un canal\n"
                     "-/join <nombrecanal> : conectarse a un canal\n"
                     "-/msg <nombreusuario> para escribir por privado a una persona\n"
-                    "-/quit <nombrecanal> para salir de un canal\n"
+                    "-/quit <nombrecanal> para salir de un canal al general\n"
                     "-/name <nombre> : para cambiarse el nombre\n"
                     "-/kick <nombrecanal> <nombrepersona> para echar a alguien de un canal\n"
                     "-/exit : para salirse del chat programa\n"
                 )
     client_socket.send(help_message.encode())
+    
 
 def handle_create_command(client_socket, channel_name, channels, client_name):
     for channel, members in channels.items():
@@ -84,6 +84,16 @@ def handle_join_command(client_socket, channel_name, channels, client_name):
     else:
         return "El canal especificado no existe."
 
+def handle_quit_command(client_socket, channels, client_name):
+    if client_name in channels["general"]:
+        return "No puedes salir del canal general usando /quit. Usa /exit para salir del chat."
+    else:
+        for channel, members in channels.items():
+            if client_name in members:
+                members.remove(client_name)
+        channels["general"].append(client_name)
+        return f"Has abandonado tu canal, has sido redirigido al canal general."
+
 def handle_client(client_socket, client_address, clients, channels):
     print(f"Conexion aceptada desde {client_address}")
     client_name = client_socket.recv(1024).decode()
@@ -94,7 +104,7 @@ def handle_client(client_socket, client_address, clients, channels):
         channels["general"] = []
     channels["general"].append(client_name)
 
-    welcome_message = "¡Bienvenido al chat! Unete a un canal mediante /create <nombre_canal> o /join <nombre_canal_existente> para comenzar.\n"
+    welcome_message = "¡Bienvenido al canal general! Crea o unete a otro canal mediante /create <n> o /join <n>.\n"
     client_socket.send(welcome_message.encode())
     
     try:
@@ -104,10 +114,14 @@ def handle_client(client_socket, client_address, clients, channels):
                 break
             if message.lower() == Commands.HELP.value:
                 handle_help_command(client_socket)
-
-            if message.lower() in [Commands.EXIT.value, Commands.QUIT.value]:
+                
+            elif message.lower() in [Commands.EXIT.value]:
                 break
-
+            
+            elif message.lower() == Commands.QUIT.value:
+                response = handle_quit_command(client_socket, channels, client_name)
+                client_socket.send(response.encode())
+                
             if message.lower() == Commands.LIST.value:
                 response = handle_list_command(client_socket, clients)
                 client_socket.send(response.encode())
