@@ -18,6 +18,7 @@ class Commands(Enum):
     COLOR = "/color"
     MYNAME = "/myname"
     MYCHANNEL = "/mychannel"
+    REMOVE = "/remove"
 
 def receive_messages(client_socket, client_name):
     while True:
@@ -91,7 +92,7 @@ def main():
                 color = parts[1]
                 user_message = f"{Commands.COLOR.value} {color}"
             else:
-                print("Comando mal formado. Uso: /color (color)")
+                print("Comando mal formado. Uso: /color (color)\n")
                 continue
             
         if user_message.lower().startswith(Commands.CREATE.value):

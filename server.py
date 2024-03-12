@@ -2,6 +2,7 @@ from socket import *
 import threading
 from enum import Enum
 
+
 class Commands(Enum):
     LIST = "/list"
     HELP = "/help"
@@ -16,6 +17,9 @@ class Commands(Enum):
     COLOR = "/color"
     MYNAME = "/myname"
     MYCHANNEL = "/mychannel"
+    REMOVE = "/remove"
+
+
 
 def handle_list_command(client_socket, channels, clients):
     channels_list = ["\033[36mCanales y clientes conectados:\033[0m"]
@@ -29,6 +33,8 @@ def handle_list_command(client_socket, channels, clients):
     channels_list_str = "".join(channels_list) + "\n"
     return channels_list_str
 
+
+
 def handle_msg_command(client_socket, sender_name, recipient_name, message, clients):
     for client in clients:
         if client[1] == recipient_name:
@@ -37,6 +43,8 @@ def handle_msg_command(client_socket, sender_name, recipient_name, message, clie
             return
     client_socket.send("El usuario especificado no está conectado o no es válido.".encode())
 
+
+
 def handle_name_command(client_socket, clients, old_name, new_name): # si uso /name en un canal, no me deja enviar mensajes hasta que me cambie de canal
     for i, client in enumerate(clients):
         if client[1] == old_name:
@@ -44,12 +52,16 @@ def handle_name_command(client_socket, clients, old_name, new_name): # si uso /n
             return f"Nombre cambiado de {old_name} a {new_name}"
     return "No se encontró el nombre de usuario especificado."
 
+
+
 def handle_color_command(client_socket, clients, client_name, color):
     for i, client in enumerate(clients):
         if client[1] == client_name:
             clients[i] = (client_socket, client_name, color)
             return f"Color cambiado a {color}"
     return "No se encontró el nombre de usuario especificado."
+
+
 
 def handle_help_command(client_socket):
     help_message = (
@@ -64,6 +76,8 @@ def handle_help_command(client_socket):
                 )
     client_socket.send(help_message.encode())
 
+
+
 def handle_create_command(client_socket, channel_name, channels, client_name):
     for channel, members in channels.items():
         if client_name in members:
@@ -73,6 +87,7 @@ def handle_create_command(client_socket, channel_name, channels, client_name):
         return f"Canal '{channel_name}' creado. Te has unido al canal '{channel_name}'.\n"
     else:
         return "El canal ya existe."
+
 
 
 def handle_join_command(client_socket, channel_name, channels, client_name):
@@ -88,6 +103,8 @@ def handle_join_command(client_socket, channel_name, channels, client_name):
     else:
         return "El canal especificado no existe."
 
+
+
 def handle_quit_command(client_socket, channels, client_name):
     if client_name in channels["general"]:
         return "No puedes salir del canal general usando /quit. Usa /exit para salir del chat."
@@ -97,6 +114,8 @@ def handle_quit_command(client_socket, channels, client_name):
                 members.remove(client_name)
         channels["general"].append(client_name)
         return f"Has abandonado tu canal, has sido redirigido al canal general.\n"
+
+
 
 def handle_kick_command(client_socket, channels, clients, client_name, channel_name, user_to_kick):
     if channel_name not in channels:
@@ -123,14 +142,40 @@ def handle_kick_command(client_socket, channels, clients, client_name, channel_n
     expelled_message = f"\033[32m{user_to_kick}\033[0m ha sido expulsado del canal \033[36m{channel_name}\033[0m y redirigido al canal general.\n"
     return expelled_message
 
+
+
 def handle_myname_command(client_socket, clients, client_name):
     return f"\033[36mTu nombre es:\033[0m {client_name}\n"
+
+
 
 def handle_mychannel_command(client_socket, channels, client_name):
     for channel, members in channels.items():
         if client_name in members:
             return f"\033[36mEstás en el canal:\033[0m {channel}\n"
     return "No estás en ningún canal."
+
+
+
+def handle_remove_command(client_socket, channels, clients, client_name, channel_name):
+    if channel_name == "general":
+        return "No se puede eliminar el canal general."
+    
+    if channel_name not in channels:
+        return "El canal especificado no existe."
+    
+    expelled_users = channels.pop(channel_name, [])
+    if expelled_users:
+        for expelled_user in expelled_users:
+            for client_socket_expelled, client_name_expelled in clients:
+                if client_name_expelled == expelled_user:
+                    expelled_message = f"El canal {channel_name} ha sido eliminado y has sido redirigido al canal general."
+                    client_socket_expelled.send(expelled_message.encode())
+                    break
+    
+    return f"El canal {channel_name} ha sido eliminado y todos los usuarios han sido expulsados al canal general."
+
+
 
 def handle_client(client_socket, client_address, clients, channels):
     print(f"Conexion aceptada desde {client_address}")
@@ -218,6 +263,15 @@ def handle_client(client_socket, client_address, clients, channels):
             elif message.lower().startswith(Commands.MYCHANNEL.value):
                 response = handle_mychannel_command(client_socket, channels, client_name)
                 client_socket.send(response.encode())
+                
+            elif message.lower().startswith(Commands.REMOVE.value):
+                parts = message.split(" ", 1)
+                if len(parts) == 2:
+                    channel_name = parts[1]
+                    response = handle_remove_command(client_socket, channels, clients, client_name, channel_name)
+                    client_socket.send(response.encode())
+                else:
+                    client_socket.send("Comando mal formado. Usa: /remove (nombre_canal)".encode())
             
             else:
                 broadcast_message = f"{client_name}: {message}"
