@@ -66,12 +66,12 @@ def handle_color_command(client_socket, clients, client_name, color):
 def handle_help_command(client_socket):
     help_message = (
                         "\033[37m- /list : Muestra la lista de personas conectadas al servidor y la lista de canales creados\n"
-                        "- /create <nombrecanal> crea un canal\n"
+                        "- /create <nombrecanal> : crea un canal\n"
                         "- /join <nombrecanal> : conectarse a un canal\n"
-                        "- /msg <nombreusuario> para escribir por privado a una persona\n"
-                        "- /quit <nombrecanal> para salir de un canal al general\n"
-                        "- /name <nombre> : para cambiarse el nombre\n"
-                        "- /kick <nombrecanal> <nombrepersona> para echar a alguien del canal en el que estás\n"
+                        "- /msg <nombreusuario> : para escribir por privado a una persona\n"
+                        "- /remove <nombrecanal> : para eliminar un canal y expulsar sus miembros al canal general\n"
+                        "- /kick <nombrecanal> <nombrepersona> para echar a alguien de un canal al general\n"
+                        "- /quit <nombrecanal> : para salir de un canal al general\n"
                         "- /exit : para salir del programa de chat\033[0m\n"
                     )
     client_socket.send(help_message.encode())
@@ -291,7 +291,7 @@ def handle_client(client_socket, client_address, clients, channels):
                     client_socket.send(response.encode())
                 else:
                     client_socket.send("Comando mal formado. Usa: /remove (nombre_canal)\n".encode())
-                
+
             else:
                 broadcast_message = f"{client_name}: {message}"
                 print(broadcast_message)
