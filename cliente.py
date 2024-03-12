@@ -16,6 +16,8 @@ class Commands(Enum):
     KICK = "/kick"
     EXIT = "/exit"
     COLOR = "/color"
+    MYNAME = "/myname"
+    MYCHANNEL = "/mychannel"
 
 def receive_messages(client_socket, client_name):
     while True:
@@ -46,7 +48,7 @@ def receive_messages(client_socket, client_name):
 def main():
     server_ip = "192.168.1.44"
     server_port = 9069
-    client_name = input("Ingrese su nombre: ")
+    client_name = input("\033[36mIngrese su nombre:\033[0m ")
     client_socket = socket(AF_INET, SOCK_STREAM)
     
     try:
@@ -103,6 +105,12 @@ def main():
             
         if user_message.lower() == Commands.LIST.value:
             user_message = Commands.LIST.value
+            
+        if user_message.lower().startswith(Commands.MYNAME.value):
+            user_message = Commands.MYNAME.value
+            
+        elif user_message.lower().startswith(Commands.MYCHANNEL.value):
+            user_message = Commands.MYCHANNEL.value
             
         if user_message.lower() == Commands.QUIT.value:
             user_message = Commands.QUIT.value

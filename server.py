@@ -14,6 +14,8 @@ class Commands(Enum):
     KICK = "/kick"
     EXIT = "/exit"
     COLOR = "/color"
+    MYNAME = "/myname"
+    MYCHANNEL = "/mychannel"
 
 def handle_list_command(client_socket, channels, clients):
     channels_list = ["\033[36mCanales y clientes conectados:\033[0m"]
@@ -121,6 +123,14 @@ def handle_kick_command(client_socket, channels, clients, client_name, channel_n
     expelled_message = f"\033[32m{user_to_kick}\033[0m ha sido expulsado del canal \033[36m{channel_name}\033[0m y redirigido al canal general.\n"
     return expelled_message
 
+def handle_myname_command(client_socket, clients, client_name):
+    return f"\033[36mTu nombre es:\033[0m {client_name}\n"
+
+def handle_mychannel_command(client_socket, channels, client_name):
+    for channel, members in channels.items():
+        if client_name in members:
+            return f"\033[36mEstás en el canal:\033[0m {channel}\n"
+    return "No estás en ningún canal."
 
 def handle_client(client_socket, client_address, clients, channels):
     print(f"Conexion aceptada desde {client_address}")
@@ -201,6 +211,14 @@ def handle_client(client_socket, client_address, clients, channels):
                 else:
                     client_socket.send("Comando mal formado. Usa: /kick (nombre_canal) (nombre_usuario)".encode())
                     
+            elif message.lower().startswith(Commands.MYNAME.value):
+                response = handle_myname_command(client_socket, clients, client_name)
+                client_socket.send(response.encode())
+            
+            elif message.lower().startswith(Commands.MYCHANNEL.value):
+                response = handle_mychannel_command(client_socket, channels, client_name)
+                client_socket.send(response.encode())
+            
             else:
                 broadcast_message = f"{client_name}: {message}"
                 print(broadcast_message)
