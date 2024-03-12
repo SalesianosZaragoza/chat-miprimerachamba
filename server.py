@@ -15,14 +15,26 @@ class Commands(Enum):
     EXIT = "/exit"
     COLOR = "/color"
 
-def handle_list_command(client_socket, clients):
-    connected_clients = ["Clientes conectados: "]
-    print("Total de clientes conectados: ", len(clients))
-    for client in clients:
-        connected_clients.append("\n\033[32m\u25CF\033[0m " + client[1])
-        print("\033[32m\u25CF\033[0m", client[1])
-    connected_clients_str = "".join(connected_clients) + "\n"
-    return connected_clients_str
+# def handle_list_command(client_socket, clients):
+#     connected_clients = ["Clientes conectados: "]
+#     print("Total de clientes conectados: ", len(clients))
+#     for client in clients:
+#         connected_clients.append("\n\033[32m\u25CF\033[0m " + client[1])
+#         print("\033[32m\u25CF\033[0m", client[1])
+#     connected_clients_str = "".join(connected_clients) + "\n"
+#     return connected_clients_str
+
+def handle_list_command(client_socket, channels, clients):
+    channels_list = ["\033[36mCanales y clientes conectados:\033[0m"]
+    for channel, members in channels.items():
+        channel_info = f"\n\033[36m\u25CF\033[0m \033[36m{channel}:\033[0m"
+        for member in members:
+            for client_socket, client_name in clients:
+                if client_name == member:
+                    channel_info += f"\n  \033[32m\u25CF\033[0m {client_name}"
+        channels_list.append(channel_info)
+    channels_list_str = "".join(channels_list) + "\n"
+    return channels_list_str
 
 def handle_msg_command(client_socket, sender_name, recipient_name, message, clients):
     for client in clients:
@@ -32,7 +44,7 @@ def handle_msg_command(client_socket, sender_name, recipient_name, message, clie
             return
     client_socket.send("El usuario especificado no está conectado o no es válido.".encode())
 
-def handle_name_command(client_socket, clients, old_name, new_name):
+def handle_name_command(client_socket, clients, old_name, new_name): # si uso /name en un canal, no me deja enviar mensajes hasta que me cambie de canal
     for i, client in enumerate(clients):
         if client[1] == old_name:
             clients[i] = (client_socket, new_name)
@@ -92,7 +104,7 @@ def handle_quit_command(client_socket, channels, client_name):
             if client_name in members:
                 members.remove(client_name)
         channels["general"].append(client_name)
-        return f"Has abandonado tu canal, has sido redirigido al canal general."
+        return f"Has abandonado tu canal, has sido redirigido al canal general.\n"
 
 def handle_client(client_socket, client_address, clients, channels):
     print(f"Conexion aceptada desde {client_address}")
@@ -123,7 +135,7 @@ def handle_client(client_socket, client_address, clients, channels):
                 client_socket.send(response.encode())
                 
             if message.lower() == Commands.LIST.value:
-                response = handle_list_command(client_socket, clients)
+                response = handle_list_command(client_socket, channels, clients)
                 client_socket.send(response.encode())
                 
             if message.startswith(Commands.NAME.value):

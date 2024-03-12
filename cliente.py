@@ -101,6 +101,9 @@ def main():
                 print("Comando mal formado. Uso: /create (nombre_canal)")
                 continue
             
+        if user_message.lower() == Commands.LIST.value:
+            user_message = Commands.LIST.value
+            
         if user_message.lower() == Commands.QUIT.value:
             user_message = Commands.QUIT.value
         
